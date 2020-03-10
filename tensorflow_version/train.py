@@ -22,14 +22,14 @@ tf.app.flags.DEFINE_float('decay_rate', 0.9, 'Default 0.9')
 FLAGS = tf.app.flags.FLAGS
 
 
-def _train(path_to_train_tfrecords_file, num_train_examples, path_to_val_tfrecords_file, num_val_examples,
+def _train(path_to_train_tfrecords_files, num_train_examples, path_to_val_tfrecords_files, num_val_examples,
            path_to_train_log_dir, path_to_restore_checkpoint_file, training_options):
     batch_size = training_options['batch_size']
     num_steps_to_show_loss = 100
     num_steps_to_check = 2000
 
     with tf.Graph().as_default():
-        image_batch, length_batch, digits_batch = Donkey.build_batch(path_to_train_tfrecords_file,
+        image_batch, length_batch, digits_batch = Donkey.build_batch(path_to_train_tfrecords_files,
                                                                      num_example=num_train_examples,
                                                                      batch_size=batch_size,
                                                                      shuffled=True)
@@ -62,7 +62,7 @@ def _train(path_to_train_tfrecords_file, num_train_examples, path_to_val_tfrecor
                 assert tf.train.checkpoint_exists(
                     path_to_restore_checkpoint_file), '%s not found' % path_to_restore_checkpoint_file
                 saver.restore(sess, path_to_restore_checkpoint_file)
-                print('Model restord from file: %s' % path_to_restore_checkpoint_file)
+                print('Model restored from file: %s' % path_to_restore_checkpoint_file)
 
             print('Start training')
             best_accuracy = 0.0
@@ -89,7 +89,7 @@ def _train(path_to_train_tfrecords_file, num_train_examples, path_to_val_tfrecor
 
                 print('Evaluating on validation dataset...')
                 path_to_latest_checkpoint_file = saver.save(sess, os.path.join(path_to_train_log_dir, 'latest.ckpt'))
-                accuracy = evaluator.evaluate(path_to_latest_checkpoint_file, path_to_val_tfrecords_file,
+                accuracy = evaluator.evaluate(path_to_latest_checkpoint_file, path_to_val_tfrecords_files,
                                               num_val_examples, global_step_val)
                 print('Accuracy = %f, best accuracy = %f' % (accuracy, best_accuracy))
 
@@ -109,12 +109,15 @@ def _train(path_to_train_tfrecords_file, num_train_examples, path_to_val_tfrecor
             coord.request_stop()
             coord.join(thread)
             print('Finished.')
-
+            
 
 def main(_):
-    path_to_train_tfrecords_file = os.path.join(FLAGS.data_dir, 'train.tfrecords')
-    path_to_val_tfrecords_file = os.path.join(FLAGS.data_dir, 'val.tfrecords')
-    path_to_tfrecords_meta_file = os.path.join(FLAGS.data_dir, 'meta.json')
+    path_to_train_tfrecords_files = [os.path.join(FLAGS.data_dir, 'train.tfrecords'), 
+        os.path.join(os.path.split(FLAGS.data_dir)[0], 'MNIST2SVHN/MNIST_Converted_train.tfrecords')]
+    path_to_val_tfrecords_files = [os.path.join(FLAGS.data_dir, 'val.tfrecords'), 
+        os.path.join(os.path.split(FLAGS.data_dir)[0], 'MNIST2SVHN/MNIST_Converted_val.tfrecords')]
+    path_to_tfrecords_meta_files = [os.path.join(FLAGS.data_dir, 'meta.json'), 
+        os.path.join(os.path.split(FLAGS.data_dir)[0], 'MNIST2SVHN/MNIST_Converted_meta.json')]
     path_to_train_log_dir = FLAGS.train_logdir
     path_to_restore_checkpoint_file = FLAGS.restore_checkpoint
     training_options = {
@@ -126,10 +129,11 @@ def main(_):
     }
 
     meta = Meta()
-    meta.load(path_to_tfrecords_meta_file)
+    for path_to_tfrecords_meta_file in path_to_tfrecords_meta_files: 
+        meta.load(path_to_tfrecords_meta_file)
 
-    _train(path_to_train_tfrecords_file, meta.num_train_examples,
-           path_to_val_tfrecords_file, meta.num_val_examples,
+    _train(path_to_train_tfrecords_files, meta.num_train_examples,
+           path_to_val_tfrecords_files, meta.num_val_examples,
            path_to_train_log_dir, path_to_restore_checkpoint_file,
            training_options)
 

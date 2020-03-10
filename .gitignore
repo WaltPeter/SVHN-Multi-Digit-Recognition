@@ -102,3 +102,7 @@ ENV/
 
 # pyenv
 .idea
+
+ckpt/* 
+tensorflow_version/logs_train/*
+tensorflow_version/__pycache__/*

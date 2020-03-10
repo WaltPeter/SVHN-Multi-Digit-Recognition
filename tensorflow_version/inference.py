@@ -2,6 +2,7 @@ import tensorflow as tf
 from model import Model
 import matplotlib.pyplot as plt
 from PIL import Image
+import time 
 
 tf.app.flags.DEFINE_string('image', None, 'Path to image file')
 tf.app.flags.DEFINE_string('restore_checkpoints', None,
@@ -12,6 +13,8 @@ FLAGS = tf.app.flags.FLAGS
 def main(_):
     path_to_image_file = FLAGS.image
     path_to_restore_checkpoints = FLAGS.restore_checkpoints
+
+    print(path_to_image_file, path_to_restore_checkpoints) 
 
     image = tf.image.decode_jpeg(tf.read_file(path_to_image_file), channels=3)
     image = tf.image.resize_images(image, [64, 64])
@@ -26,12 +29,20 @@ def main(_):
     digits_predictions = tf.argmax(digits_logits, axis=2)
     digits_predictions_string = tf.reduce_join(tf.as_string(digits_predictions), axis=1)
 
-    with tf.Session() as sess:
+    cfg = dict({
+		'allow_soft_placement': False,
+		'log_device_placement': False
+		})
+    cfg['device_count'] = {'GPU': 0}
+
+    with tf.Session(config = tf.ConfigProto(**cfg)) as sess:
         restorer = tf.train.Saver()
         restorer.restore(sess, path_to_restore_checkpoints)
-
+        start = int(round(time.time() * 1000)) 
         length_predictions_val, digits_predictions_string_val, digits_predictions_val = sess.run(
             [length_predictions, digits_predictions_string, digits_predictions])
+        duration = int(round(time.time() * 1000)) - start
+        print("Process time: {} ms".format(duration))
         title = 'length: %d\ndigits= %d, %d, %d, %d, %d' % (length_predictions_val[0],
                                                             digits_predictions_val[0][0],
                                                             digits_predictions_val[0][1],

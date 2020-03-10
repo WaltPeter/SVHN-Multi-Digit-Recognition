@@ -128,7 +128,7 @@ def convert_to_tfrecords(path_to_dataset_dir_and_digit_struct_mat_file_tuples,
         with h5py.File(path_to_digit_struct_mat_file, 'r') as digit_struct_mat_file:
             example_reader = ExampleReader(path_to_image_files)
             for index, path_to_image_file in enumerate(path_to_image_files):
-                print('%d/%d processing %s' % (index + 1, total_files, path_to_image_file))
+                # print('%d/%d processing %s' % (index + 1, total_files, path_to_image_file))
 
                 example = example_reader.read_and_convert(digit_struct_mat_file)
                 if example is None:

@@ -28,10 +28,11 @@ class Donkey(object):
         return image, length, digits
 
     @staticmethod
-    def build_batch(path_to_tfrecord_file, num_example, batch_size, shuffled):
-        assert tf.gfile.Exists(path_to_tfrecord_file), "%s not found" % path_to_tfrecord_file
+    def build_batch(path_to_tfrecord_files, num_example, batch_size, shuffled):
+        for path_to_tfrecord_file in path_to_tfrecord_files: 
+            assert tf.gfile.Exists(path_to_tfrecord_file), "%s not found" % path_to_tfrecord_file
 
-        filename_queue = tf.train.string_input_producer([path_to_tfrecord_file], num_epochs=None)
+        filename_queue = tf.train.string_input_producer(path_to_tfrecord_files, num_epochs=None)
         image, length, digits = Donkey._read_and_decode(filename_queue)
 
         min_queue_examples = int(0.4 * num_example)

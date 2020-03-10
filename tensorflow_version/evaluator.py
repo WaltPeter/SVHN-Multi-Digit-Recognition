@@ -10,14 +10,14 @@ class Evaluator(object):
     def __init__(self, path_to_eval_log_dir):
         self.summary_writer = tf.summary.FileWriter(path_to_eval_log_dir)
 
-    def evaluate(self, path_to_checkpoint, path_to_tfrecords_file, num_examples, global_step):
+    def evaluate(self, path_to_checkpoint, path_to_tfrecords_files, num_examples, global_step):
         batch_size = 128
 
         num_batches = num_examples // batch_size
         needs_include_length = False
 
         with tf.Graph().as_default():
-            image_batch, length_batch, digits_batch = Donkey.build_batch(path_to_tfrecords_file,
+            image_batch, length_batch, digits_batch = Donkey.build_batch(path_to_tfrecords_files,
                                                                          num_example=num_examples,
                                                                          batch_size=batch_size,
                                                                          shuffled=False)
